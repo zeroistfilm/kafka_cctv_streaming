@@ -1,39 +1,35 @@
 version: '3.3'
 
 ## zookeeper에서 볼륨 생성 권한 오류가 난다.
-## sudo chown -R1001:1001 ./bitnami
+## sudo chown -R 1001:1001 ./bitnami
 ## 명령어 사용하면된다.
 services:
+services:
   zookeeper:
-    image: 'bitnami/zookeeper:3.7.0'
-    container_name: zookeeper
-    ports:
-      - '2181:2181'
+    image: confluentinc/cp-zookeeper:latest
     environment:
-      - ALLOW_ANONYMOUS_LOGIN=yes
-    volumes:
-      - ./bitnami/zookeeper:/bitnami/zookeeper
+      ZOOKEEPER_SERVER_ID: 1
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+      ZOOKEEPER_INIT_LIMIT: 5
+      ZOOKEEPER_SYNC_LIMIT: 2
+    ports:
+      - "22181:2181"
 
   kafka:
-    image: 'bitnami/kafka:2.8.0'
-    container_name: kafka
-    ports:
-      - "9093:9093"
-    expose:
-      - "9093"
-    environment:
-      - KAFKA_ZOOKEEPER_CONNECT=zookeeper:2181
-      - KAFKA_CREATE_TOPICS="kafka_capstone_event_bus:1:1"
-      - KAFKA_CFG_AUTO_CREATE_TOPICS_ENABLE=true
-      - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=CLIENT:PLAINTEXT,EXTERNAL:PLAINTEXT
-      - KAFKA_CFG_LISTENERS=CLIENT://:9092,EXTERNAL://:9093
-      - KAFKA_CFG_ADVERTISED_LISTENERS=CLIENT://kafka:9092,EXTERNAL://localhost:9093
-      - KAFKA_INTER_BROKER_LISTENER_NAME=CLIENT
-      - ALLOW_PLAINTEXT_LISTENER=yes
+    image: confluentinc/cp-kafka:latest
     depends_on:
       - zookeeper
-    volumes:
-      - ./bitnami/kafka:/bitnami/kafka
+    ports:
+      - "29092:29092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:29092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
 
   kafdrop:
     image: obsidiandynamics/kafdrop
@@ -41,7 +37,7 @@ services:
     ports:
      - "9000:9000"
     environment:
-      KAFKA_BROKERCONNECT: "kafka:9092"
+      KAFKA_BROKERCONNECT: "kafka:29092"
       JVM_OPTS: "-Xms16M -Xmx48M -Xss180K -XX:-TieredCompilation -XX:+UseStringDeduplication -noverify"
     depends_on:
       - kafka
