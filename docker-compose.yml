@@ -6,8 +6,8 @@ services:
     container_name: zookeeper
     ports:
       - '2181:2181'
-    #environment:
-      #- ALLOW_ANONYMOUS_LOGIN=yes
+    environment:
+      - ALLOW_ANONYMOUS_LOGIN=yes
     volumes:
       - ./bitnami/zookeeper:/bitnami/zookeeper
 
