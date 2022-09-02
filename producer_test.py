@@ -4,11 +4,9 @@ import cv2
 
 from kafka import KafkaProducer
 from kafka.errors import KafkaError
-import logging
-logging.basicConfig(level=logging.DEBUG)
 
 #producer = KafkaProducer(bootstrap_servers='112.170.59.30:9093')
-producer = KafkaProducer(bootstrap_servers='3.38.136.70:9093')
+producer = KafkaProducer(bootstrap_servers='ec2-3-38-136-70.ap-northeast-2.compute.amazonaws.com:9093')
 topic = 'my-topic'
 
 
