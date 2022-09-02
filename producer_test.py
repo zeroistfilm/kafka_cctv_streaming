@@ -6,7 +6,7 @@ from kafka import KafkaProducer
 from kafka.errors import KafkaError
 
 #producer = KafkaProducer(bootstrap_servers='112.170.59.30:9093')
-producer = KafkaProducer(bootstrap_servers='localhost:9093')
+producer = KafkaProducer(bootstrap_servers='3.38.136.70:9093')
 topic = 'my-topic'
 
 

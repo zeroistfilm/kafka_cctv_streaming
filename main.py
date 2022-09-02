@@ -6,7 +6,7 @@ app = FastAPI()
 
 
 def kafkastream():
-    consumer = KafkaConsumer('my-topic', bootstrap_servers='localhost:9093')
+    consumer = KafkaConsumer('my-topic', bootstrap_servers='3.38.136.70:9093')
     try:
         for message in consumer:
             yield (b'--frame\r\n'b'Content-Type: image/jpeg\r\n\r\n' + message.value + b'\r\n\r\n')
