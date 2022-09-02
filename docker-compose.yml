@@ -6,8 +6,8 @@ services:
     container_name: zookeeper
     ports:
       - '2181:2181'
-    environment:
-      - ALLOW_ANONYMOUS_LOGIN=yes
+    #environment:
+      #- ALLOW_ANONYMOUS_LOGIN=yes
     volumes:
       - ./bitnami/zookeeper:/bitnami/zookeeper
 
@@ -24,9 +24,9 @@ services:
       - KAFKA_CFG_AUTO_CREATE_TOPICS_ENABLE=true
       - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=CLIENT:PLAINTEXT,EXTERNAL:PLAINTEXT
       - KAFKA_CFG_LISTENERS=CLIENT://:9092,EXTERNAL://:9093
-      - KAFKA_CFG_ADVERTISED_LISTENERS=CLIENT://kafka:9092,EXTERNAL://localhost:9093
+      - KAFKA_CFG_ADVERTISED_LISTENERS=CLIENT://kafka:9092,EXTERNAL://127.0.0.1:9093
       - KAFKA_INTER_BROKER_LISTENER_NAME=CLIENT
-      - ALLOW_PLAINTEXT_LISTENER=yes
+      #- ALLOW_PLAINTEXT_LISTENER=yes
     depends_on:
       - zookeeper
     volumes:
