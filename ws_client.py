@@ -3,7 +3,7 @@ import websockets
 
 
 async def my_connect():
-    async with websockets.connect("ws://localhost:8080/ws") as websocket:
+    async with websockets.connect("ws://3.38.136.70:8000/ws") as websocket:
         try:
             while True:
                 # if websockets.exceptions.ConnectionClosedOK:

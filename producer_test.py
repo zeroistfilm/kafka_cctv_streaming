@@ -4,16 +4,16 @@ import cv2
 
 from kafka import KafkaProducer
 from kafka.errors import KafkaError
-#import logging
-#logging.basicConfig(level=logging.DEBUG)
-#producer = KafkaProducer(bootstrap_servers='112.170.59.30:9093')
-producer = KafkaProducer(bootstrap_servers='ec2-3-38-136-70.ap-northeast-2.compute.amazonaws.com:29092')
+import aiokafka
+
+
+producer = aiokafka.AIOKafkaProducer(bootstrap_servers='ec2-3-38-136-70.ap-northeast-2.compute.amazonaws.com:29092')
 topic = 'my-topic'
 
 
 def emit_video():
+    await producer.start()
     print('start emitting')
-
     video = cv2.VideoCapture('rtsp://admin:emfvnf1!@192.168.2.20:554/trackID=2')
 
     while video.isOpened():
@@ -25,16 +25,10 @@ def emit_video():
         print('.', end='', flush=True)
         # png might be too large to emit
         data = cv2.imencode('.jpeg', frame)[1].tobytes()
-
-        future = producer.send(topic, data)
         try:
-            future.get(timeout=10)
-        except KafkaError as e:
-            print(e)
-            break
-
-
-
+            await producer.send_and_wait(topic,data)
+        finally:
+            await producer.stop()
         # to reduce CPU usage
         time.sleep(0.2)
     print()
