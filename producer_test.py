@@ -11,14 +11,14 @@ from fastapi import FastAPI, WebSocket, Request
 
 app = FastAPI()
 
-producer = aiokafka.AIOKafkaProducer(bootstrap_servers='ec2-3-38-136-70.ap-northeast-2.compute.amazonaws.com:29092')
+#producer = aiokafka.AIOKafkaProducer(bootstrap_servers='ec2-3-38-136-70.ap-northeast-2.compute.amazonaws.com:29092')
+producer = KafkaProducer(bootstrap_servers='ec2-3-38-136-70.ap-northeast-2.compute.amazonaws.com:9093')
 topic = 'my-topic'
 
 
 @app.on_event("startup")
 async def startup():
 	await asyncio.create_task(emit_video())
-
 
 
 async def emit_video():
@@ -34,10 +34,19 @@ async def emit_video():
         print('.', end='', flush=True)
         # png might be too large to emit
         data = cv2.imencode('.jpeg', frame)[1].tobytes()
+
+        future = producer.send(topic, data)
         try:
-            await producer.send_and_wait(topic,data)
-        finally:
-            await producer.stop()
+            future.get(timeout=10)
+        except KafkaError as e:
+            print(e)
+            break
+
+
+        # try:
+        #     await producer.send_and_wait(topic,data)
+        # finally:
+        #     await producer.stop()
         # to reduce CPU usage
         time.sleep(0.2)
 
