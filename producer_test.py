@@ -7,7 +7,7 @@ from kafka import KafkaProducer
 from kafka.errors import KafkaError
 import aiokafka
 from fastapi import FastAPI, WebSocket, Request
-
+import websockets
 
 app = FastAPI()
 
@@ -18,8 +18,13 @@ topic = 'my-topic'
 
 @app.on_event("startup")
 async def startup():
-	await asyncio.create_task(emit_video())
+	await asyncio.create_task(ws_manager())
 
+async def ws_manager():
+    async with websockets.connect("ws://3.38.136.70:8000/ws") as websocket:
+        while True:
+            data_rcv = await websocket.recv()
+            print(data_rcv)
 
 async def emit_video():
     #await producer.start()
@@ -41,8 +46,6 @@ async def emit_video():
         except KafkaError as e:
             print(e)
             break
-
-
         # try:
         #     await producer.send_and_wait(topic,data)
         # finally:
