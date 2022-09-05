@@ -1,3 +1,4 @@
+import asyncio
 import time
 import sys
 import cv2
@@ -15,6 +16,11 @@ topic = 'my-topic'
 
 
 @app.on_event("startup")
+async def startup():
+	await asyncio.create_task(emit_video())
+
+
+
 async def emit_video():
     await producer.start()
     print('start emitting')
@@ -22,7 +28,6 @@ async def emit_video():
 
     while video.isOpened():
         success, frame = video.read()
-
         if not success:
             print('X', end='', flush=True)
             break
