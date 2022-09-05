@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+    <title>Chat</title>
+</head>
+<body>
+    <nft-card
+    contractAddress="0x2953399124f0cbb46d2cbacd8a89cf0599974963"
+    tokenId="50577715437444723863388278484234003645058278528783099067104259903571657490433">
+    </nft-card>
+    <script src="https://unpkg.com/embeddable-nfts/dist/nft-card.min.js"></script>
+<h1>WebSocket Chat</h1>
+<form action="" onsubmit="sendMessage(event)">
+    <input type="text" id="messageText" autocomplete="off"/>
+    <button>Send</button>
+</form>
+<ul id='messages'>
+</ul>
+<script>
+    var ws = new WebSocket("ws://localhost:8080/ws");
+    ws.onmessage = function (event) {
+        var messages = document.getElementById('messages')
+        var message = document.createElement('li')
+        var content = document.createTextNode(event.data)
+        message.appendChild(content)
+        messages.appendChild(message)
+    };
+
+    function sendMessage(event) {
+        var input = document.getElementById("messageText")
+        ws.send(input.value)
+        input.value = ''
+        event.preventDefault()
+    }
+</script>
+</body>
+</html>
