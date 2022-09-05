@@ -23,7 +23,7 @@ async def startup():
 
 async def emit_video():
     #await producer.start()
-    print('start emitting')
+    print('start emitting!')
     video = cv2.VideoCapture('rtsp://admin:emfvnf1!@192.168.2.20:554/trackID=2')
 
     while video.isOpened():
