@@ -8,51 +8,61 @@ from kafka.errors import KafkaError
 import aiokafka
 from fastapi import FastAPI, WebSocket, Request
 import websockets
+import json
+import multiprocessing
 
 app = FastAPI()
 
-#producer = aiokafka.AIOKafkaProducer(bootstrap_servers='ec2-3-38-136-70.ap-northeast-2.compute.amazonaws.com:29092')
-producer = KafkaProducer(bootstrap_servers='ec2-3-38-136-70.ap-northeast-2.compute.amazonaws.com:29092')
+# producer = KafkaProducer(bootstrap_servers='ec2-3-38-136-70.ap-northeast-2.compute.amazonaws.com:29092')
 topic = 'my-topic'
 
+camManager = {}
 
 @app.on_event("startup")
 async def startup():
-	await asyncio.create_task(ws_manager())
 
-async def ws_manager():
-    async with websockets.connect("ws://3.38.136.70:8000/ws") as websocket:
-        while True:
-            data_rcv = await websocket.recv()
-            print(data_rcv)
+    await asyncio.gather(ws_manager('1-2'), ws_manager('1-1'))
 
-async def emit_video():
-    #await producer.start()
+
+
+async def ws_manager(index):
+        async with websockets.connect(f"ws://localhost:8080/ws/{index}") as websocket:
+            print(index)
+            while True:
+                data_rcv = await websocket.recv()
+                camidx, value = list(json.loads(data_rcv).items())[0]
+                camManager[camidx] = value
+                print(camManager)
+                if camManager[camidx] == 'on':
+                    asyncio.create_task(emit_video(camidx, value))
+                elif camManager[camidx] == 'off':
+                    pass
+                await asyncio.sleep(0.1)
+
+
+async def emit_video(camidx, value):
+    producer = aiokafka.AIOKafkaProducer(bootstrap_servers='ec2-3-38-136-70.ap-northeast-2.compute.amazonaws.com:29092')
+    await producer.start()
     print('start emitting!')
-    video = cv2.VideoCapture('rtsp://admin:emfvnf1!@192.168.2.20:554/trackID=2')
+    if camidx =='1-1':
+        video = cv2.VideoCapture('rtsp://admin:emfvnf1!@192.168.2.20:554/trackID=2')
+    elif camidx =='1-2':
+        video = cv2.VideoCapture('rtsp://admin:emfvnf1!@192.168.2.21:554/trackID=2')
+    try:
+        while video.isOpened() and camManager[camidx] == 'on':
+            success, frame = video.read()
+            if not success:
+                print('X', end='', flush=True)
+                break
+            print('.', end='', flush=True)
+            # png might be too large to emit
+            data = cv2.imencode('.jpeg', frame)[1].tobytes()
 
-    while video.isOpened():
-        success, frame = video.read()
-        if not success:
-            print('X', end='', flush=True)
-            break
-        print('.', end='', flush=True)
-        # png might be too large to emit
-        data = cv2.imencode('.jpeg', frame)[1].tobytes()
+            await producer.send_and_wait(topic, data)
+            await asyncio.sleep(0.2)
 
-        future = producer.send(topic, data)
-        try:
-            future.get(timeout=10)
-        except KafkaError as e:
-            print(e)
-            break
-        # try:
-        #     await producer.send_and_wait(topic,data)
-        # finally:
-        #     await producer.stop()
-        # to reduce CPU usage
-        time.sleep(0.2)
-
-    video.release()
-    print('done')
+    finally:
+        await producer.stop()
+        video.release()
+        print('relese!')
 

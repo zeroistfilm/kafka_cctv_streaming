@@ -1,0 +1,55 @@
+{
+  "established": false,
+  "flow": {
+    "category": {
+      "application": 0,
+      "domain": 0,
+      "protocol": 9
+    },
+    "detected_application": 0,
+    "detected_application_name": "Unknown",
+    "detected_protocol": 91,
+    "detected_protocol_name": "TLS",
+    "detection_guessed": false,
+    "detection_updated": false,
+    "dhc_hit": true,
+    "digest": "50d99ac1cb91abd8bfe53dcf600a84d0fe22d8a2",
+    "dns_host_name": "sg.tdatamaster.com",
+    "first_seen_at": 1662478401840,
+    "first_update_at": 1662478401840,
+    "host_server_name": "sg.tdatamaster.com",
+    "ip_nat": false,
+    "ip_protocol": 6,
+    "ip_version": 4,
+    "last_seen_at": 1662478402299,
+    "local_ip": "10.0.0.3",
+    "local_mac": "00:00:00:00:00:00",
+    "local_origin": true,
+    "local_port": 57164,
+    "other_ip": "101.32.110.253",
+    "other_mac": "00:00:00:00:00:00",
+    "other_port": 8013,
+    "other_type": "remote",
+    "risks": {
+      "ndpi_risk_score": 60,
+      "ndpi_risk_score_client": 30,
+      "ndpi_risk_score_server": 30,
+      "risks": [
+        16,
+        34
+      ]
+    },
+    "soft_dissector": false,
+    "ssl": {
+      "alpn": [],
+      "alpn_server": [],
+      "cipher_suite": "0x0000",
+      "client_sni": "sg.tdatamaster.com",
+      "version": "0x0303"
+    },
+    "vlan_id": 0
+  },
+  "interface": "wg0",
+  "internal": true,
+  "type": "flow"
+}
