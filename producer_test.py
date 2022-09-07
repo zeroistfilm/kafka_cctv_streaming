@@ -17,16 +17,34 @@ app = FastAPI()
 topic = 'my-topic'
 
 camManager = {}
-
+capDict = {}
 @app.on_event("startup")
 async def startup():
+    global capDict
+    with open("cctv_config.json", 'r', encoding='UTF-8') as f:
+        caminfo = json.load(f)
 
-    await asyncio.gather(ws_manager('1-2'), ws_manager('1-1'))
+    for farm in caminfo.keys():
+        capDict[farm] = {}
+        for sector in caminfo[farm].keys():
+            capDict[farm][sector] = {}
+            for cam in caminfo[farm][sector].keys():
+                capDict[farm][sector][cam] = {}
+                for position in caminfo[farm][sector][cam].keys():
+                    capDict[farm][sector][cam][position] = {}
+                    if caminfo[farm][sector][cam][position].split('://')[0] == "rtsp":
+                        # print(caminfo[farm][sector][cam][position])
+                        try:
+                            capDict[farm][sector][cam][position] = caminfo[farm][sector][cam][position]
+                        except Exception as e:
+                            capDict[farm][sector][cam][position] = "Error check RTSP address"
+
+    await asyncio.gather(*(ws_manager(idx) for idx in capDict['deulpul']['1']['cctv'].keys()))
 
 
 
 async def ws_manager(index):
-        async with websockets.connect(f"ws://localhost:8080/ws/{index}") as websocket:
+        async with websockets.connect(f"ws://3.38.136.70:8080/ws/{index}") as websocket:
             print(index)
             while True:
                 data_rcv = await websocket.recv()
@@ -43,18 +61,17 @@ async def ws_manager(index):
 async def emit_video(camidx, value):
     producer = aiokafka.AIOKafkaProducer(bootstrap_servers='ec2-3-38-136-70.ap-northeast-2.compute.amazonaws.com:29092')
     await producer.start()
-    print('start emitting!')
-    if camidx =='1-1':
-        video = cv2.VideoCapture('rtsp://admin:emfvnf1!@192.168.2.20:554/trackID=2')
-    elif camidx =='1-2':
-        video = cv2.VideoCapture('rtsp://admin:emfvnf1!@192.168.2.21:554/trackID=2')
+    print(f'{camidx} start emitting!')
+
+    video = cv2.VideoCapture(capDict['deulpul']['1']['cctv'][camidx])
+
     try:
         while video.isOpened() and camManager[camidx] == 'on':
             success, frame = video.read()
             if not success:
                 print('X', end='', flush=True)
                 break
-            print('.', end='', flush=True)
+            #print('.', end='', flush=True)
             # png might be too large to emit
             data = cv2.imencode('.jpeg', frame)[1].tobytes()
 
@@ -64,5 +81,5 @@ async def emit_video(camidx, value):
     finally:
         await producer.stop()
         video.release()
-        print('relese!')
+        print(f'{camidx} relese!')
 
