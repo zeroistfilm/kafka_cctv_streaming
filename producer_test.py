@@ -44,7 +44,7 @@ async def startup():
 
 
 async def ws_manager(index):
-        async with websockets.connect(f"ws://3.38.136.70:8080/ws/{index}") as websocket:
+        async with websockets.connect(f"ws://3.38.136.70:8000/ws/{index}") as websocket:
             print(index)
             while True:
                 data_rcv = await websocket.recv()
