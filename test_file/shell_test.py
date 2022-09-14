@@ -24,8 +24,7 @@ parseKey = ['detected_protocol_name',
             'other_port',
             'first_seen_at',
             'first_update_at',
-            'last_seen_at'
-            ]
+            'last_seen_at']
 while True:
     line = proc.stdout.readline().decode('utf-8').strip()
     if not line: break
@@ -33,38 +32,31 @@ while True:
         line = dict(json.loads(line))
 
         #Get only values of wg0 json
-        if 'interface' in line.keys():
-            if line['interface'] == "wg0":
-                lineflow = line['flow']
+        if 'interface' not in line.keys() and line['interface'] != 'wg0':
+            continue
 
-                #Generate data in dictionary form
-                resultDict = {}
-                for key in parseKey:
-                    try:
-                        if key.split('_')[-1]=="at":
-                            resultDict[key] = getTimeKSTFromTimeStamp(int(lineflow[key])/1000)
-                        else:
-                            resultDict[key] = lineflow[key]
-                    except Exception as e:
-                        resultDict[key] = 'NULL'
+        lineflow = line['flow']        
+        #Generate data in dictionary form
+        resultDict = {}
+        for key in parseKey:
+            try:
+                if key.split('_')[-1]=="at":
+                    resultDict[key] = getTimeKSTFromTimeStamp(int(lineflow[key])/1000)
+                else:
+                    resultDict[key] = lineflow[key]
+            except Exception as e:
+                resultDict[key] = 'NULL'
 
-                #Save data with CSV
-                if resultDict['local_ip'] != 'NULL':
-                    print(resultDict)
-                    filename=f"./csv/{resultDict['local_ip']}.csv"
-                    with open(filename, 'a', newline='') as f_object:
-                        dictwriter_object = DictWriter(f_object, fieldnames=parseKey)
-                        if os.path.getsize(filename) == 0:
-                            dictwriter_object.writeheader()
-                        dictwriter_object.writerow(resultDict)
-                        f_object.close()
+        #Save data with CSV
+        if resultDict['local_ip'] != 'NULL':
+            print(resultDict)
+            filename=f"./csv/{resultDict['local_ip']}.csv"
+            with open(filename, 'a', newline='') as f_object:
+                dictwriter_object = DictWriter(f_object, fieldnames=parseKey)
+                if os.path.getsize(filename) == 0:
+                    dictwriter_object.writeheader()
+                dictwriter_object.writerow(resultDict)
+                f_object.close()
 
     except Exception as e:
         print(e)
-
-
-
-
-
-
-
