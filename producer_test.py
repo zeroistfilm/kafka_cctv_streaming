@@ -46,26 +46,26 @@ async def startup():
 
 async def ws_manager(index):
     async with websockets.connect(f"ws://3.38.136.70:8000/ws/{index}") as websocket:
-        print("ws_manager is opened for ", index)
+        #print("ws_manager is opened for ", index)
 
         while True:
-            data_rcv = await websocket.recv()
-            print(type(json.loads(json.loads(data_rcv))))
+            data_rcv = json.loads(await websocket.recv())
+            try:
+                print(data_rcv)
+                camidx, value = list(data_rcv.keys()), list(data_rcv.values())
+            except Exception as e:
+                print(e)
 
-            camidx, value = data_rcv.keys(), data_rcv.values()
-            print(camidx, value)
-            camManager[camidx] = value
 
-            if camManager[camidx] == 'on':
-
-                print('asyncio.create_task')
-                asyncio.create_task(emit_video(camidx, value))
-            elif camManager[camidx] == 'off':
-
-                print('asyncio.cancel')
-                pass
-
-            await asyncio.sleep(0.1)
+            # if value == 'on':
+            #     print(camidx, value)
+            #     print('asyncio.create_task')
+            #     asyncio.create_task(emit_video(camidx, value))
+            # elif value == 'off':
+            #     #print('asyncio.cancel')
+            #     pass
+            #
+            # await asyncio.sleep(1)
 
 
 async def emit_video(camidx, value):

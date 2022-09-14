@@ -44,7 +44,6 @@
         "2-18": "rtsp://admin:emfvnf1!@192.168.2.57:554/trackID=2",
         "2-19": "rtsp://admin:emfvnf1!@192.168.2.58:554/trackID=2",
         "2-20": "rtsp://admin:emfvnf1!@192.168.2.59:554/trackID=2",
-
         "rgb": "rtsp://admin:qwe1010@192.168.2.15:554/live3.sdp",
         "thermal": "rtsp://admin:qwe1010@192.168.2.15:554/live4.sdp"
       }
