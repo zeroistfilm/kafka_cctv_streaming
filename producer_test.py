@@ -13,7 +13,7 @@ import multiprocessing
 from collections import defaultdict
 
 app = FastAPI()
-camManager = defaultdict(dict)
+camManager = {}
 capDict = {}
 
 
@@ -53,12 +53,12 @@ async def ws_manager(index):
             camidx, value = list(json.loads(data_rcv).items())[0]
             camManager[camidx] = value
             print(camManager)
-            if camManager[camidx] == 'on' and camManager[camidx]['streamCount'] == 0:
-                camManager[camidx]['streamCount'] += 1
+            if camManager[camidx] == 'on':
+
                 print('asyncio.create_task')
                 asyncio.create_task(emit_video(camidx, value))
             elif camManager[camidx] == 'off':
-                camManager[camidx]['streamCount'] -= 1
+
                 print('asyncio.cancel')
                 pass
 
