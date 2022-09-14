@@ -47,7 +47,7 @@ class CamClientManager:
 
     def getSendMsg(self):
         self.isUpdate = False
-        if self.aliveClientCount > 1:
+        if self.aliveClientCount >= 1:
             return {self.camidx: 'on'}
         if self.aliveClientCount == 0:
             return {self.camidx: 'off'}
@@ -81,6 +81,7 @@ async def wsconnect(websocket: WebSocket, camIdx: str):
     while True:
         # if not camClientMng.isCamOpend():
         if camManager[camIdx].isUpdated():
+            print(camIdx)
             print(camManager[camIdx].getSendMsg())
             await websocket.send_json(camManager[camIdx].getSendMsg())
 
