@@ -51,21 +51,20 @@ async def ws_manager(index):
         while True:
             data_rcv = json.loads(await websocket.recv())
             try:
-                print(data_rcv)
                 camidx, value = list(data_rcv.keys()), list(data_rcv.values())
             except Exception as e:
                 print(e)
 
 
-            # if value == 'on':
-            #     print(camidx, value)
-            #     print('asyncio.create_task')
-            #     asyncio.create_task(emit_video(camidx, value))
-            # elif value == 'off':
-            #     #print('asyncio.cancel')
-            #     pass
-            #
-            # await asyncio.sleep(1)
+            if value == 'on':
+                print(camidx, value)
+                print('asyncio.create_task')
+                asyncio.create_task(emit_video(camidx, value))
+            elif value == 'off':
+                #print('asyncio.cancel')
+                pass
+
+            await asyncio.sleep(1)
 
 
 async def emit_video(camidx, value):

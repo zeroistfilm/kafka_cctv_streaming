@@ -23,6 +23,7 @@ class CamClientManager:
         self.camidx = camidx
         self.aliveClientCount = 0
         self.clientList = []
+        self.isUpdated=False
 
     def isCamOpend(self):
         if self.aliveClientCount > 0:
@@ -31,6 +32,7 @@ class CamClientManager:
             return False
 
     def addClient(self, client):
+        self.isUpdated = True
         self.aliveClientCount += 1
         self.clientList.append(client)
 
@@ -44,10 +46,17 @@ class CamClientManager:
         return self.clientList
 
     def getSendMsg(self):
+        self.isUpdated=False
         if self.aliveClientCount > 1:
             return {self.camidx: 'on'}
         if self.aliveClientCount == 0:
             return {self.camidx: 'off'}
+
+    def isUpdated(self):
+        return self.isUpdated
+
+
+
 
     def __str__(self):
         return f"aliveClientCount: {self.aliveClientCount}, clientList: {self.clientList}"
@@ -73,8 +82,8 @@ async def wsConnect(websocket: WebSocket, camIdx: str):
 
     while True:
         # if not camClientMng.isCamOpend():
-        print(camManager[camIdx].getSendMsg())
-        await websocket.send_json(camManager[camIdx].getSendMsg())
+        if camManager[camIdx].isUpdated():
+            await websocket.send_json(camManager[camIdx].getSendMsg())
 
         await asyncio.sleep(1)
 
