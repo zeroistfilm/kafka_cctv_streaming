@@ -10,14 +10,15 @@ from fastapi import FastAPI, WebSocket, Request
 import websockets
 import json
 import multiprocessing
+from collections import defaultdict
 
 app = FastAPI()
-
-# producer = KafkaProducer(bootstrap_servers='ec2-3-38-136-70.ap-northeast-2.compute.amazonaws.com:29092')
-
-
-camManager = {}
+camManager = defaultdict(dict)
 capDict = {}
+
+
+def getOpenWSCounts():
+    pass
 
 
 @app.on_event("startup")
@@ -35,7 +36,6 @@ async def startup():
                 for position in caminfo[farm][sector][cam].keys():
                     capDict[farm][sector][cam][position] = {}
                     if caminfo[farm][sector][cam][position].split('://')[0] == "rtsp":
-                        # print(caminfo[farm][sector][cam][position])
                         try:
                             capDict[farm][sector][cam][position] = caminfo[farm][sector][cam][position]
                         except Exception as e:
@@ -46,16 +46,22 @@ async def startup():
 
 async def ws_manager(index):
     async with websockets.connect(f"ws://3.38.136.70:8000/ws/{index}") as websocket:
-        print(index)
+        print("ws_manager is opened for ", index)
+
         while True:
             data_rcv = await websocket.recv()
             camidx, value = list(json.loads(data_rcv).items())[0]
             camManager[camidx] = value
             print(camManager)
-            if camManager[camidx] == 'on':
+            if camManager[camidx] == 'on' and camManager[camidx]['streamCount'] == 0:
+                camManager[camidx]['streamCount'] += 1
+                print('asyncio.create_task')
                 asyncio.create_task(emit_video(camidx, value))
             elif camManager[camidx] == 'off':
+                camManager[camidx]['streamCount'] -= 1
+                print('asyncio.cancel')
                 pass
+
             await asyncio.sleep(0.1)
 
 
@@ -72,8 +78,6 @@ async def emit_video(camidx, value):
             if not success:
                 print('X', end='', flush=True)
                 break
-            # print('.', end='', flush=True)
-            # png might be too large to emit
             data = cv2.imencode('.jpeg', frame)[1].tobytes()
 
             await producer.send_and_wait(topic=camidx, value=data)

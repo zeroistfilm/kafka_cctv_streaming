@@ -18,36 +18,9 @@ requestQueue = {}
 socketDict = {}
 
 
-# get image from aiokafka consumer
-async def get_image(camIdx):
-    requestQueue[camIdx].append('on')
-    consumer = aiokafka.AIOKafkaConsumer(camIdx,
-                                 bootstrap_servers='ec2-3-38-136-70.ap-northeast-2.compute.amazonaws.com:29092')
-    await consumer.start()
-    try:
-        while True:
-            msg = await consumer.getone()
-            print(msg.value)
-            #yield (b'--frame\r\n'b'Content-Type: image/jpeg\r\n\r\n' + msg.value + b'\r\n\r\n')
-    finally:
-        await consumer.stop()
 
 
-# def kafkastream(camIdx):
-#
-#     consumer = KafkaConsumer('my-topic', bootstrap_servers='ec2-3-38-136-70.ap-northeast-2.compute.amazonaws.com:29092')
-#     print(',', end='', flush=True)
-#     try:
-#         for message in consumer:
-#             print('.', end='', flush=True)
-#             yield (b'--frame\r\n'b'Content-Type: image/jpeg\r\n\r\n' + message.value + b'\r\n\r\n')
-#     finally:
-#
-#         consumer.close()
-#         print('consumer close')
 
-
-# 웹소켓 설정 ws://127.0.0.1:8000/ws 로 접속할 수 있음
 @app.websocket("/ws/{camIdx}")
 async def wsConnect(websocket: WebSocket, camIdx: str):
     requestQueue[camIdx] = deque()
@@ -72,14 +45,15 @@ async def wsConnect(websocket: WebSocket, camIdx: str):
 async def wsConnect(websocket: WebSocket, camIdx: str):
     print(f"client connected : {websocket.client}")
     await websocket.accept()
-    requestQueue[camIdx].append('on')
-    consumer = aiokafka.AIOKafkaConsumer(camIdx,
-                                         bootstrap_servers='ec2-3-38-136-70.ap-northeast-2.compute.amazonaws.com:29092')
+    if len(requestQueue[camIdx]) != 0:
+        requestQueue[camIdx].append('on')
+
+    consumer = aiokafka.AIOKafkaConsumer(camIdx,bootstrap_servers='ec2-3-38-136-70.ap-northeast-2.compute.amazonaws.com:29092')
     await consumer.start()
+
     try:
         while True:
             msg = await consumer.getone()
-            #await websocket.send_text(b'--frame\r\n'b'Content-Type: image/jpeg\r\n\r\n' + msg.value + b'\r\n\r\n')
             await websocket.send_text(msg.value)
             await asyncio.sleep(0.1)
     except Exception as e:
@@ -89,16 +63,7 @@ async def wsConnect(websocket: WebSocket, camIdx: str):
         await consumer.stop()
 
 
-
-
-
-
 @app.get('/{camIdx}')
 async def Home(request: Request, camIdx: str):
     return templates.TemplateResponse("client.html", context= {"request": request})
-    # return RedirectResponse(f"ws://localhost:8080/ws/{camIdx}")
-    # try:
-    #     return StreamingResponse(get_image(camIdx), media_type='multipart/x-mixed-replace; boundary=frame')
-    # finally:
-    #     print('off')
-    #     requestQueue[camIdx].append('off')
+
