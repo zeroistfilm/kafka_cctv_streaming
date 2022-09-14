@@ -46,7 +46,7 @@ class CamClientManager:
         return self.clientList
 
     def getSendMsg(self):
-        self.isUpdated=False
+        self.isUpdate=False
         if self.aliveClientCount > 1:
             return {self.camidx: 'on'}
         if self.aliveClientCount == 0:
