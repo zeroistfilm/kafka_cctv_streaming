@@ -50,6 +50,7 @@ async def ws_manager(index):
 
         while True:
             data_rcv = await websocket.recv()
+
             data_rcv = json.load(data_rcv)
             camidx, value = list(data_rcv.keys()), list(data_rcv.values())
 
