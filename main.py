@@ -77,14 +77,15 @@ async def wsconnect(websocket: WebSocket, camIdx: str):
 
     print(f"client connected : {websocket.client}")
     await websocket.accept()  # client의 websocket접속 허용
+    try:
+        while True:
+            # if not camClientMng.isCamOpend():
+            if camManager[camIdx].isUpdated():
+                await websocket.send_json(camManager[camIdx].getSendMsg())
 
-    while True:
-        # if not camClientMng.isCamOpend():
-        if camManager[camIdx].isUpdated():
-            await websocket.send_json(camManager[camIdx].getSendMsg())
-
-        await asyncio.sleep(0.1)
-
+            await asyncio.sleep(0.1)
+    finally:
+        websocket.close()
 
 @app.websocket("/ws/client/{camIdx}")
 async def wsConnect(websocket: WebSocket, camIdx: str):
