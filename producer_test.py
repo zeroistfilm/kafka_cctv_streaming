@@ -15,8 +15,8 @@ from collections import defaultdict
 app = FastAPI()
 taskManagers = {}
 capDict = {}
-# IPADDRESS= '3.38.136.70:8000'
-IPADDRESS = 'localhost:8080'
+IPADDRESS= '3.38.136.70:8000'
+#IPADDRESS = 'localhost:8080'
 
 
 class TaskManager():

@@ -117,4 +117,4 @@ async def wsConnect(websocket: WebSocket, camIdx: str):
 
 @app.get('/{camIdx}')
 async def Home(request: Request, camIdx: str):
-    return templates.TemplateResponse("client_localhost.html", context={"request": request})
+    return templates.TemplateResponse("client.html", context={"request": request})
