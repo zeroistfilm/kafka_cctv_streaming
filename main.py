@@ -45,7 +45,7 @@ async def wsConnect(websocket: WebSocket, camIdx: str):
 async def wsConnect(websocket: WebSocket, camIdx: str):
     print(f"client connected : {websocket.client}")
     await websocket.accept()
-    if len(requestQueue[camIdx]) != 0:
+    if len(requestQueue[camIdx]) == 0:
         requestQueue[camIdx].append('on')
 
     consumer = aiokafka.AIOKafkaConsumer(camIdx,bootstrap_servers='ec2-3-38-136-70.ap-northeast-2.compute.amazonaws.com:29092')
