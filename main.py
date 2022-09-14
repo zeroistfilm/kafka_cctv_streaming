@@ -37,6 +37,7 @@ class CamClientManager:
         self.clientList.append(client)
 
     def removeClient(self):
+        self.isUpdate = True
         self.aliveClientCount -= 1
 
     def getAliveClientCount(self):
@@ -51,6 +52,7 @@ class CamClientManager:
             return {self.camidx: 'on'}
         if self.aliveClientCount == 0:
             return {self.camidx: 'off'}
+
 
     def isUpdated(self):
         return self.isUpdate
@@ -90,28 +92,27 @@ async def wsconnect(websocket: WebSocket, camIdx: str):
 @app.websocket("/ws/client/{camIdx}")
 async def wsConnect(websocket: WebSocket, camIdx: str):
     print(f"client connected : {websocket.client}")
+
+    await websocket.accept()
+    # if len(requestQueue[camIdx]) == 0:
+    #    requestQueue[camIdx].append('on')
+    camManager[camIdx].addClient(websocket)
+
+    consumer = aiokafka.AIOKafkaConsumer(camIdx,
+                                         bootstrap_servers='ec2-3-38-136-70.ap-northeast-2.compute.amazonaws.com:29092')
+    await consumer.start()
+
     try:
-        await websocket.accept()
-        # if len(requestQueue[camIdx]) == 0:
-        #    requestQueue[camIdx].append('on')
-        camManager[camIdx].addClient(websocket)
-
-        consumer = aiokafka.AIOKafkaConsumer(camIdx,
-                                             bootstrap_servers='ec2-3-38-136-70.ap-northeast-2.compute.amazonaws.com:29092')
-        await consumer.start()
-
-        try:
-            while True:
-                msg = await consumer.getone()
-                await websocket.send_text(msg.value)
-                await asyncio.sleep(0.1)
-        except Exception as e:
-            print(e)
-        finally:
-            camManager[camIdx].removeClient()
-            await consumer.stop()
+        while True:
+            msg = await consumer.getone()
+            await websocket.send_text(msg.value)
+            await asyncio.sleep(0.1)
+    except Exception as e:
+        print(e)
     finally:
-        websocket.close()
+        camManager[camIdx].removeClient()
+        await consumer.stop()
+
 
 
 @app.get('/{camIdx}')
