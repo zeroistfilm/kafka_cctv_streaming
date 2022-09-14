@@ -21,7 +21,7 @@ socketDict = {}
 # get image from aiokafka consumer
 async def get_image(camIdx):
     requestQueue[camIdx].append('on')
-    consumer = aiokafka.AIOKafkaConsumer('my-topic',
+    consumer = aiokafka.AIOKafkaConsumer(camIdx,
                                  bootstrap_servers='ec2-3-38-136-70.ap-northeast-2.compute.amazonaws.com:29092')
     await consumer.start()
     try:
