@@ -50,19 +50,19 @@ async def ws_manager(index):
 
         while True:
             data_rcv = await websocket.recv()
-            # data_rcv = json.load(data_rcv)
-            # camidx, value = list(data_rcv.keys()), list(data_rcv.values())
-            #
-            #
-            # if value == 'on':
-            #     print(camidx, value)
-            #     print('asyncio.create_task')
-            #     asyncio.create_task(emit_video(camidx, value))
-            # elif value == 'off':
-            #     print('asyncio.cancel')
-            #     pass
+            data_rcv = json.load(data_rcv)
+            camidx, value = list(data_rcv.keys()), list(data_rcv.values())
 
-            #await asyncio.sleep(0.1)
+
+            if value == 'on':
+                print(camidx, value)
+                print('asyncio.create_task')
+                asyncio.create_task(emit_video(camidx, value))
+            elif value == 'off':
+                print('asyncio.cancel')
+                pass
+
+            await asyncio.sleep(0.1)
 
 
 async def emit_video(camidx, value):

@@ -32,7 +32,7 @@ class CamClientManager:
             return False
 
     def addClient(self, client):
-        self.isUpdated = True
+        self.isUpdate = True
         self.aliveClientCount += 1
         self.clientList.append(client)
 
@@ -46,7 +46,7 @@ class CamClientManager:
         return self.clientList
 
     def getSendMsg(self):
-        self.isUpdate=False
+        self.isUpdate = False
         if self.aliveClientCount > 1:
             return {self.camidx: 'on'}
         if self.aliveClientCount == 0:
@@ -55,26 +55,24 @@ class CamClientManager:
     def isUpdated(self):
         return self.isUpdate
 
-
-
-
     def __str__(self):
         return f"aliveClientCount: {self.aliveClientCount}, clientList: {self.clientList}"
 
 
 @app.on_event("startup")
 async def startup():
-    for camIdx in ['1-1', '1-2', '1-3', '1-4', '1-5', '1-6', '1-7', '1-8', '1-9', '1-10', '1-11', '1-12', '1-13', '1-14','1-15', '1-16', '1-17', '1-18', '1-19', '1-20',
-                   '2-1', '2-2', '2-3', '2-4', '2-5', '2-6', '2-7', '2-8', '2-9', '2-10', '2-11', '2-12', '2-13', '2-14', '2-15', '2-16', '2-17', '2-18', '2-19', '2-20',
+    for camIdx in ['1-1', '1-2', '1-3', '1-4', '1-5', '1-6', '1-7', '1-8', '1-9', '1-10', '1-11', '1-12', '1-13',
+                   '1-14', '1-15', '1-16', '1-17', '1-18', '1-19', '1-20',
+                   '2-1', '2-2', '2-3', '2-4', '2-5', '2-6', '2-7', '2-8', '2-9', '2-10', '2-11', '2-12', '2-13',
+                   '2-14', '2-15', '2-16', '2-17', '2-18', '2-19', '2-20',
                    'rgb', 'thermal']:
-
         camManager[camIdx] = CamClientManager(camIdx)
         print('create CamClientManager', camIdx)
 
 
 # 농장에서 요청하는 ws
 @app.websocket("/ws/{camIdx}")
-async def wsConnect(websocket: WebSocket, camIdx: str):
+async def wsconnect(websocket: WebSocket, camIdx: str):
     # requestQueue[camIdx] = deque()
 
     print(f"client connected : {websocket.client}")
