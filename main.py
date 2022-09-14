@@ -44,9 +44,9 @@ class CamClientManager:
 
     def getSendMsg(self):
         if self.aliveClientCount > 1:
-            return {self.camidx: 'on'}
+            return json.dumps({self.camidx: 'on'})
         if self.aliveClientCount == 0:
-            return {self.camidx: 'off'}
+            return json.dumps({self.camidx: 'off'})
 
     def __str__(self):
         return f"aliveClientCount: {self.aliveClientCount}, clientList: {self.clientList}"
@@ -73,9 +73,9 @@ async def wsConnect(websocket: WebSocket, camIdx: str):
 
     while True:
         # if not camClientMng.isCamOpend():
-        await websocket.send_json(camManager[camIdx].getSendMsg())
+        await websocket.send_json(json.dumps(camManager[camIdx].getSendMsg()))
 
-        await asyncio.sleep(0.1)
+        await asyncio.sleep(1)
 
 
 @app.websocket("/ws/client/{camIdx}")

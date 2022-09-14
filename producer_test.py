@@ -50,9 +50,11 @@ async def ws_manager(index):
 
         while True:
             data_rcv = await websocket.recv()
+            print(data_rcv)
             camidx, value = list(json.loads(data_rcv).items())[0]
+
             camManager[camidx] = value
-            print(camManager)
+
             if camManager[camidx] == 'on':
 
                 print('asyncio.create_task')
