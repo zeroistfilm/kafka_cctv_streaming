@@ -18,7 +18,7 @@ socketDict = {}
 camManager = {}
 
 class CamClientManager:
-    def __int__(self, camidx):
+    def __init__(self, camidx):
         self.camidx = camidx
         self.aliveClientCount = 0
         self.clientList = []
