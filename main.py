@@ -23,7 +23,7 @@ class CamClientManager:
         self.camidx = camidx
         self.aliveClientCount = 0
         self.clientList = []
-        self.isUpdated=False
+        self.isUpdate = False
 
     def isCamOpend(self):
         if self.aliveClientCount > 0:
@@ -53,7 +53,7 @@ class CamClientManager:
             return {self.camidx: 'off'}
 
     def isUpdated(self):
-        return self.isUpdated
+        return self.isUpdate
 
 
 
