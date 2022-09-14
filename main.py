@@ -13,17 +13,17 @@ import json
 from starlette.templating import Jinja2Templates
 
 templates = Jinja2Templates(directory="templates")
-app = FastAPI()
 socketDict = {}
 camManager = {}
 
+app = FastAPI()
 
 class CamClientManager:
     def __init__(self, camidx):
         self.camidx = camidx
         self.aliveClientCount = 0
         self.clientList = []
-        self.isUpdate = False
+        self.hasDataForSend = False
 
     def isCamOpend(self):
         if self.aliveClientCount > 0:
@@ -32,12 +32,12 @@ class CamClientManager:
             return False
 
     def addClient(self, client):
-        self.isUpdate = True
+        self.hasDataForSend = True
         self.aliveClientCount += 1
         self.clientList.append(client)
 
     def removeClient(self):
-        self.isUpdate = True
+        self.hasDataForSend = True
         self.aliveClientCount -= 1
 
     def getAliveClientCount(self):
@@ -47,7 +47,7 @@ class CamClientManager:
         return self.clientList
 
     def getSendMsg(self):
-        self.isUpdate = False
+        self.hasDataForSend = False
         if self.aliveClientCount >= 1:
             return {self.camidx: 'on'}
         if self.aliveClientCount == 0:
@@ -55,7 +55,7 @@ class CamClientManager:
 
 
     def isUpdated(self):
-        return self.isUpdate
+        return self.hasDataForSend
 
     def __str__(self):
         return f"aliveClientCount: {self.aliveClientCount}, clientList: {self.clientList}"
@@ -106,7 +106,7 @@ async def wsConnect(websocket: WebSocket, camIdx: str):
         while True:
             msg = await consumer.getone()
             await websocket.send_text(msg.value)
-            await asyncio.sleep(0.1)
+            await asyncio.sleep(0.05)
     except Exception as e:
         print(e)
     finally:
@@ -117,4 +117,4 @@ async def wsConnect(websocket: WebSocket, camIdx: str):
 
 @app.get('/{camIdx}')
 async def Home(request: Request, camIdx: str):
-    return templates.TemplateResponse("client.html", context={"request": request})
+    return templates.TemplateResponse("client_localhost.html", context={"request": request})
