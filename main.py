@@ -73,7 +73,7 @@ async def wsConnect(websocket: WebSocket, camIdx: str):
 
     while True:
         # if not camClientMng.isCamOpend():
-        await websocket.send_json(json.dumps(camManager[camIdx].getSendMsg()))
+        await websocket.send_json(camManager[camIdx].getSendMsg())
 
         await asyncio.sleep(1)
 
