@@ -81,8 +81,7 @@ async def wsconnect(websocket: WebSocket, camIdx: str):
     while True:
         # if not camClientMng.isCamOpend():
         if camManager[camIdx].isUpdated():
-            print(camIdx)
-            print(camManager[camIdx].getSendMsg())
+            print(camManager[camIdx].isUpdated())
             await websocket.send_json(camManager[camIdx].getSendMsg())
 
         await asyncio.sleep(0.1)
