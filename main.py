@@ -44,9 +44,9 @@ class CamClientManager:
 
     def getSendMsg(self):
         if self.aliveClientCount > 1:
-            return json.dumps({self.camidx: 'on'})
+            return {self.camidx: 'on'}
         if self.aliveClientCount == 0:
-            return json.dumps({self.camidx: 'off'})
+            return {self.camidx: 'off'}
 
     def __str__(self):
         return f"aliveClientCount: {self.aliveClientCount}, clientList: {self.clientList}"

@@ -50,9 +50,10 @@ async def ws_manager(index):
 
         while True:
             data_rcv = await websocket.recv()
-            print(data_rcv)
-            camidx, value = list(json.loads(data_rcv).items())[0]
+            print(type(json.loads(json.loads(data_rcv))))
 
+            camidx, value = data_rcv.keys(), data_rcv.values()
+            print(camidx, value)
             camManager[camidx] = value
 
             if camManager[camidx] == 'on':
