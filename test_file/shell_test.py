@@ -18,7 +18,7 @@ class ShellLog:
                          'first_seen_at',
                          'first_update_at',
                          'last_seen_at',
-                         'spend_time']
+                         ]
 
         self.resultData = {}
 
@@ -40,15 +40,17 @@ class ShellLog:
             except Exception as e:
                 self.resultData[key] = 'NULL'
 
-    def calcSpendTime(self):
-        print(self.resultData['last_seen_at'], self.resultData['first_seen_at'])
-        self.resultData['spend_time'] = self.resultData['last_seen_at'] - self.resultData['first_seen_at']
 
     def reformatTime(self):
-        self.resultData['first_seen_at'] = self.resultData['first_seen_at'].strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]
-        self.resultData['first_update_at'] = self.resultData['first_update_at'].strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]
-        self.resultData['last_seen_at'] = self.resultData['last_seen_at'].strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]
-        self.resultData['spend_time'] = self.resultData['spend_time'].total_seconds()
+        for key in ['first_seen_at', 'first_update_at', 'last_seen_at']:
+            if type(self.resultData[key]) == datetime.datetime:
+                self.resultData[key] = self.resultData[key].strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]
+
+    def getOtherIP(self):
+        return self.resultData['other_ip']
+
+    def getLocalIP(self):
+        return self.resultData['local_ip']
 
     def hasLocalIP(self):
         if self.resultData['local_ip'] != 'NULL':
@@ -59,10 +61,10 @@ class ShellLog:
     def getTimeKSTFromTimeStamp(self, timestamp):
         from datetime import timezone
         utctime = datetime.datetime.now(timezone.utc).strftime("%Y%m%d_%H:%M:%S")
-        ostime = datetime.datetime.now().strftime("%Y%m%d_%H:%M:%S")
+        kstime = datetime.datetime.now().strftime("%Y%m%d_%H:%M:%S")
 
         # .strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]
-        if utctime == ostime:
+        if utctime == kstime:
             return datetime.datetime.fromtimestamp(timestamp) + datetime.timedelta(hours=9)
         else:
             return datetime.datetime.fromtimestamp(timestamp)
@@ -70,8 +72,7 @@ class ShellLog:
     def getHost_server_nameAndOther_ip(self):
         return self.resultData['host_server_name'], self.resultData['other_ip']
 
-    def getLocalIP(self):
-        return self.resultData['local_ip']
+
 
     def getLastSeenAtDatetime(self):
         if type(self.resultData['last_seen_at']) == datetime.datetime:
@@ -102,7 +103,8 @@ class PacketWatchDog:
     # 파일명 local_ip.csv
     # 날짜 변경을 기준으로 짜르기
 
-    def __init__(self, local_ip):
+    def __init__(self, watch_ip, local_ip):
+        self.watch_ip = watch_ip
         self.local_ip = local_ip
         self.MIN_WATCH_COUNT = 2
         self.WATCH_TIME_MINUTES = 30
@@ -113,22 +115,36 @@ class PacketWatchDog:
         self.host_server_name = 'NULL'
         self.other_ip = 'NULL'
 
-        self.watchStart = datetime.datetime.now()
-        self.watchEnd = datetime.datetime.now() + datetime.timedelta(minutes=self.WATCH_TIME_MINUTES)
+        self.watchStart = self.getTimeKSTFromTimeStamp(datetime.datetime.now().timestamp())
+        self.watchEnd = self.getTimeKSTFromTimeStamp(
+            (datetime.datetime.now() + datetime.timedelta(minutes=self.WATCH_TIME_MINUTES)).timestamp())
         self.packetTimeList = []
 
+
+    def getTimeKSTFromTimeStamp(self, timestamp):
+        from datetime import timezone
+        utctime = datetime.datetime.now(timezone.utc).strftime("%Y%m%d_%H:%M:%S")
+        kstime = datetime.datetime.now().strftime("%Y%m%d_%H:%M:%S")
+
+        # .strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]
+        if utctime == kstime:
+            return datetime.datetime.fromtimestamp(timestamp) + datetime.timedelta(hours=9)
+        else:
+            return datetime.datetime.fromtimestamp(timestamp)
+
     def addPacket(self, host_server_name, other_ip, packetTime):
-        self.host_server_name = host_server_name
-        self.other_ip = other_ip
-        appendedPacketTime = packetTime
-        self.packetTimeList.append(appendedPacketTime)
+        if host_server_name not in self.DESTINATION_FILTER and other_ip not in self.DESTINATION_FILTER:
+            self.host_server_name = host_server_name
+            self.other_ip = other_ip
+            appendedPacketTime = self.getTimeKSTFromTimeStamp(packetTime)
+            self.packetTimeList.append(appendedPacketTime)
 
     def calcDuration(self):
         if self.isTimeToSave():
             return self.packetTimeList[-1] - self.watchStart
 
     def isTimeToSave(self):
-        if self.watchEnd < datetime.datetime.now():
+        if self.watchEnd < self.getTimeKSTFromTimeStamp(datetime.datetime.now().timestamp()):
             return True
         else:
             return False
@@ -140,13 +156,15 @@ class PacketWatchDog:
             return False
 
     def getDataForSave(self):
-        return {'date': self.watchStart.strftime('%Y-%m-%d')[:-3],
+        return {'date': self.watchStart.strftime('%Y-%m-%d'),
                 'host_server_name': self.host_server_name,
                 'other_ip': self.other_ip,
-                'duration': self.calcDuration().total_seconds()}
+                'duration': round(float(self.calcDuration().total_seconds()), 4)}
 
     def isEndofDay(self):
-        if datetime.datetime.now().hour == '23' and datetime.datetime.now().minute == '59' and datetime.datetime.now().second == '59':
+        if self.getTimeKSTFromTimeStamp(datetime.datetime.now().timestamp()).hour == '23' and \
+                self.getTimeKSTFromTimeStamp(datetime.datetime.now().timestamp()).minute == '59' and \
+                self.getTimeKSTFromTimeStamp(datetime.datetime.now().timestamp()).second == '59':
             return True
         else:
             return False
@@ -167,31 +185,33 @@ if __name__ == "__main__":
     activeWatchDog = {}
     while True:
         line = proc.stdout.readline().decode('utf-8').strip()
-        if not line: break
+        if not line:
+            break
+
         try:
             line = dict(json.loads(line))
+        except json.decoder.JSONDecodeError:
+            continue
 
-            # Save packet data
-            shelllog = ShellLog(line)
-            if shelllog.isWg0Format():
-                shelllog.parseData()
-                shelllog.calcSpendTime()
-                shelllog.reformatTime()
-                print(shelllog)
+        # Save packet data
+        shelllog = ShellLog(line)
+        if shelllog.isWg0Format():
+            shelllog.parseData()
+            shelllog.reformatTime()
 
-                if shelllog.hasLocalIP():
-                    shelllog.save()
+            if shelllog.hasLocalIP():
+                shelllog.save()
 
             # Packet WatchDog
-            if shelllog.getLocalIP() not in activeWatchDog:
-                activeWatchDog[shelllog.getLocalIP()] = PacketWatchDog(shelllog.getLocalIP())
+            if shelllog.getOtherIP() not in activeWatchDog:
+                activeWatchDog[shelllog.getOtherIP()] = PacketWatchDog(shelllog.getOtherIP(), shelllog.getLocalIP())
 
-            activeWatchDog[shelllog.getLocalIP()].addPacket(*shelllog.getHost_server_nameAndOther_ip(),
-                                                      shelllog.getLastSeenAtDatetime())
+            activeWatchDog[shelllog.getOtherIP()].addPacket(*shelllog.getHost_server_nameAndOther_ip(), datetime.datetime.now().timestamp())
 
-            if activeWatchDog[shelllog.getLocalIP()].isTimeToSave() or activeWatchDog[shelllog.getLocalIP()].isEndofDay():
-                activeWatchDog[shelllog.getLocalIP()].save()
-                del activeWatchDog[shelllog.getLocalIP()]
+            for key, packetWatchdog in list(activeWatchDog.items()):
+                if packetWatchdog.isTimeToSave():
+                    packetWatchdog.save()
+                    print(f"saved {packetWatchdog.getDataForSave()}")
+                    del activeWatchDog[key]
 
-        except Exception as e:
-            print(e)
+
