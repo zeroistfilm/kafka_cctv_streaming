@@ -209,7 +209,7 @@ if __name__ == "__main__":
             activeWatchDog[shelllog.getOtherIP()].addPacket(*shelllog.getHost_server_nameAndOther_ip(), datetime.datetime.now().timestamp())
 
             for key, packetWatchdog in list(activeWatchDog.items()):
-                if packetWatchdog.isTimeToSave():
+                if packetWatchdog.isTimeToSave() or packetWatchdog.isEndofDay():
                     packetWatchdog.save()
                     print(f"saved {packetWatchdog.getDataForSave()}")
                     del activeWatchDog[key]

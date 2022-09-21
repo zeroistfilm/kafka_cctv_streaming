@@ -15,8 +15,8 @@ from collections import defaultdict
 app = FastAPI()
 taskManagers = {}
 capDict = {}
-IPADDRESS= '3.38.136.70:8000'
-#IPADDRESS = 'localhost:8080'
+#IPADDRESS= '3.38.136.70:8000'
+IPADDRESS = 'localhost:8080'
 
 
 class TaskManager():
@@ -42,6 +42,9 @@ class TaskManager():
 
     def getTask(self):
         return self.task
+
+    def resetKillSignal(self):
+        self.killSignal = False
 
     def setKillSignal(self, killSignal):
         self.killSignal = killSignal
@@ -91,12 +94,13 @@ async def ws_manager(camidx):
             data_rcv = json.loads(data_rcv)
             camidx, value = list(data_rcv.keys())[0], list(data_rcv.values())[0]
             print(f'camidx: {camidx}, value: {value}')
+
             if value == 'on':
                 if taskManagers[camidx].isTaskAlive():
                     continue
                 else:
                     print('asyncio.create_task')
-                    taskManagers[camidx].setTask(asyncio.create_task(emit_video(camidx, value)))
+                    taskManagers[camidx].setTask(asyncio.create_task(emitVideo(camidx, value)))
 
             elif value == 'off':
                 taskManagers[camidx].setKillSignal(True)
@@ -105,7 +109,7 @@ async def ws_manager(camidx):
             # await asyncio.sleep(0.05)
 
 
-async def emit_video(camidx, value):
+async def emitVideo(camidx, value):
     producer = aiokafka.AIOKafkaProducer(bootstrap_servers='ec2-3-38-136-70.ap-northeast-2.compute.amazonaws.com:29092')
     await producer.start()
     print(f'{camidx} start emitting!')
@@ -116,9 +120,9 @@ async def emit_video(camidx, value):
         while video.isOpened():
             success, frame = video.read()
             if not success:
-                print('X', end='', flush=True)
+                #print('X', end='', flush=True)
                 break
-            print('.', end='', flush=True)
+            #print('.', end='', flush=True)
             data = cv2.imencode('.jpeg', frame)[1].tobytes()
 
             await producer.send_and_wait(topic=camidx, value=data)
@@ -131,6 +135,6 @@ async def emit_video(camidx, value):
     finally:
         await producer.stop()
         video.release()
-        taskManagers[camidx].setKillSignal(False)
+        taskManagers[camidx].resetKillSignal()
         print(f'{camidx} relese!')
 

@@ -23,7 +23,7 @@ class CamClientManager:
         self.camidx = camidx
         self.aliveClientCount = 0
         self.clientList = []
-        self.hasDataForSend = False
+        self.isUpdate = False
 
     def isCamOpend(self):
         if self.aliveClientCount > 0:
@@ -32,12 +32,13 @@ class CamClientManager:
             return False
 
     def addClient(self, client):
-        self.hasDataForSend = True
-        self.aliveClientCount += 1
+        self.isUpdate = True
         self.clientList.append(client)
+        self.aliveClientCount += 1
 
-    def removeClient(self):
-        self.hasDataForSend = True
+    def removeClient(self, client):
+        self.isUpdate = True
+        self.clientList.remove(client)
         self.aliveClientCount -= 1
 
     def getAliveClientCount(self):
@@ -47,7 +48,7 @@ class CamClientManager:
         return self.clientList
 
     def getSendMsg(self):
-        self.hasDataForSend = False
+        self.isUpdate = False
         if self.aliveClientCount >= 1:
             return {self.camidx: 'on'}
         if self.aliveClientCount == 0:
@@ -55,7 +56,7 @@ class CamClientManager:
 
 
     def isUpdated(self):
-        return self.hasDataForSend
+        return self.isUpdate
 
     def __str__(self):
         return f"aliveClientCount: {self.aliveClientCount}, clientList: {self.clientList}"
@@ -81,9 +82,7 @@ async def wsconnect(websocket: WebSocket, camIdx: str):
     await websocket.accept()  # client의 websocket접속 허용
 
     while True:
-        # if not camClientMng.isCamOpend():
         if camManager[camIdx].isUpdated():
-            print(camManager[camIdx].isUpdated())
             await websocket.send_json(camManager[camIdx].getSendMsg())
 
         await asyncio.sleep(0.1)
@@ -94,12 +93,9 @@ async def wsConnect(websocket: WebSocket, camIdx: str):
     print(f"client connected : {websocket.client}")
 
     await websocket.accept()
-    # if len(requestQueue[camIdx]) == 0:
-    #    requestQueue[camIdx].append('on')
     camManager[camIdx].addClient(websocket)
 
-    consumer = aiokafka.AIOKafkaConsumer(camIdx,
-                                         bootstrap_servers='ec2-3-38-136-70.ap-northeast-2.compute.amazonaws.com:29092')
+    consumer = aiokafka.AIOKafkaConsumer(camIdx, bootstrap_servers='ec2-3-38-136-70.ap-northeast-2.compute.amazonaws.com:29092')
     await consumer.start()
 
     try:
@@ -110,11 +106,11 @@ async def wsConnect(websocket: WebSocket, camIdx: str):
     except Exception as e:
         print(e)
     finally:
-        camManager[camIdx].removeClient()
+        camManager[camIdx].removeClient(websocket)
         await consumer.stop()
 
 
 
 @app.get('/{camIdx}')
 async def Home(request: Request, camIdx: str):
-    return templates.TemplateResponse("client.html", context={"request": request})
+    return templates.TemplateResponse("client_localhost.html", context={"request": request})
