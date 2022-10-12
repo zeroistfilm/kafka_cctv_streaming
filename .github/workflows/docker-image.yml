@@ -22,4 +22,4 @@ jobs:
 
       - uses: actions/checkout@v3        
       - name: Build and push      
-        run: docker build ./local/. --file Dockerfile --tag uniai_kafka:0.1
+        run:  docker build -t uniai_kafka:0.1 ./local/.
