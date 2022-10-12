@@ -2,4 +2,4 @@
 
 2. uvicorn main:app
 
-3. python3 producer_test.py
+3. uvicorn producer:app
