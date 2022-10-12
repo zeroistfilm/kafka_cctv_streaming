@@ -1,31 +1,21 @@
 import asyncio
-import time
-import sys
-import cv2
 
-from kafka import KafkaProducer
-from kafka.errors import KafkaError
+import cv2
 import aiokafka
-from fastapi import FastAPI, WebSocket, Request
+from fastapi import FastAPI
 import websockets
 import json
-import multiprocessing
-from collections import defaultdict
 
+print("producer is opened")
 app = FastAPI()
 taskManagers = {}
 capDict = {}
-#IPADDRESS= '3.38.136.70:8000'
-IPADDRESS = 'localhost:8080'
+IPADDRESS= '3.38.136.70:8000'
+#IPADDRESS = 'localhost:8080'
 
 
 class TaskManager():
-    # ['__await__', '__class__', '__class_getitem__', '__del__', '__delattr__', '__dir__', '__doc__', '__eq__', '__format__',
-    # '__ge__', '__getattribute__', '__gt__', '__hash__', '__init__', '__init_subclass__', '__iter__', '__le__', '__lt__', '__ne__',
-    # '__new__', '__reduce__', '__reduce_ex__', '__repr__', '__setattr__', '__sizeof__', '__str__', '__subclasshook__', '_asyncio_future_blocking',
-    # '_callbacks', '_cancel_message', '_coro', '_exception', '_fut_waiter', '_log_destroy_pending', '_log_traceback', '_loop', '_make_cancelled_error',
-    # '_must_cancel', '_repr_info', '_result', '_source_traceback', '_state', 'add_done_callback', 'cancel', 'cancelled', 'done', 'exception', 'get_coro',
-    # 'get_loop', 'get_name', 'get_stack', 'print_stack', 'remove_done_callback', 'result', 'set_exception', 'set_name', 'set_result']
+
     def __init__(self):
         self.task = None
         self.killSignal = False
@@ -63,6 +53,7 @@ class TaskManager():
 
 @app.on_event("startup")
 async def startup():
+    print("startup")
     global capDict
     with open("cctv_config.json", 'r', encoding='UTF-8') as f:
         caminfo = json.load(f)
@@ -85,6 +76,7 @@ async def startup():
 
 
 async def ws_manager(camidx):
+    print(f"ws_manager {camidx}")
     async with websockets.connect(f"ws://{IPADDRESS}/ws/{camidx}") as websocket:
         print("ws_manager is opened for ", camidx)
         taskManagers[camidx] = TaskManager()
@@ -115,7 +107,6 @@ async def emitVideo(camidx, value):
     print(f'{camidx} start emitting!')
 
     video = cv2.VideoCapture(capDict['deulpul']['1']['cctv'][camidx])
-
     try:
         while video.isOpened():
             success, frame = video.read()
