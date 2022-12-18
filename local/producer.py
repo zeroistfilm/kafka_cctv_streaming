@@ -82,23 +82,35 @@ async def ws_manager(camidx):
         taskManagers[camidx] = TaskManager()
         # 웹소켓 유지
         while True:
-            data_rcv = await websocket.recv()
-            data_rcv = json.loads(data_rcv)
-            camidx, value = list(data_rcv.keys())[0], list(data_rcv.values())[0]
-            print(f'camidx: {camidx}, value: {value}')
+            try:
+                data_rcv = await websocket.recv()
+                data_rcv = json.loads(data_rcv)
+                camidx, value = list(data_rcv.keys())[0], list(data_rcv.values())[0]
+                print(f'camidx: {camidx}, value: {value}')
 
-            if value == 'on':
-                if taskManagers[camidx].isTaskAlive():
-                    continue
-                else:
-                    print('asyncio.create_task')
-                    taskManagers[camidx].setTask(asyncio.create_task(emitVideo(camidx, value)))
+                if value == 'on':
+                    if taskManagers[camidx].isTaskAlive():
+                        continue
+                    else:
+                        print('asyncio.create_task')
+                        taskManagers[camidx].setTask(asyncio.create_task(emitVideo(camidx, value)))
 
-            elif value == 'off':
-                taskManagers[camidx].setKillSignal(True)
-                taskManagers[camidx].close()
+                elif value == 'off':
+                    taskManagers[camidx].setKillSignal(True)
+                    taskManagers[camidx].close()
+            except KeyboardInterrupt:
+                print("KeyboardInterrupt")
+                break
 
             # await asyncio.sleep(0.05)
+
+
+def drawBox(frame):
+    boxCoord=(300,300200,100)
+    cv2.rectangle(frame, boxCoord (0, 255, 0), 1)
+    return frame
+
+
 
 
 async def emitVideo(camidx, value):
@@ -111,9 +123,9 @@ async def emitVideo(camidx, value):
         while video.isOpened():
             success, frame = video.read()
             if not success:
-                #print('X', end='', flush=True)
                 break
-            #print('.', end='', flush=True)
+            if camidx=='rgb':
+                frame = drawBox(frame)
             data = cv2.imencode('.jpeg', frame)[1].tobytes()
 
             await producer.send_and_wait(topic=camidx, value=data)
