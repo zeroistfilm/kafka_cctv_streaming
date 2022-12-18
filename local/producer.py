@@ -108,6 +108,8 @@ async def ws_manager(camidx):
 
 
 def drawBox(frame):
+    padding = 100
+    frame = cv2.copyMakeBorder(frame, padding, padding, padding, padding, cv2.BORDER_CONSTANT, value=(0, 0, 0))
     boxCoord = (300, 300, 200, 100)
     cv2.rectangle(frame, boxCoord, (0, 255, 0), 1)
     return frame
@@ -124,7 +126,8 @@ async def emitVideo(camidx, value):
             success, frame = video.read()
             if not success:
                 break
-            if camidx == 'rgb':
+            if camidx == 'rgb' or camidx == 'thermal':
+                frame = cv2.resize(frame, dsize=(640,480), interpolation=cv2.INTER_CUBIC)
                 frame = drawBox(frame)
             data = cv2.imencode('.jpeg', frame)[1].tobytes()
 
