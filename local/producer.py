@@ -10,8 +10,10 @@ print("producer is opened")
 app = FastAPI()
 taskManagers = {}
 capDict = {}
-IPADDRESS= '3.38.136.70:8000'
-#IPADDRESS = 'localhost:8080'
+IPADDRESS = '3.38.136.70:8000'
+
+
+# IPADDRESS = 'localhost:8080'
 
 
 class TaskManager():
@@ -106,11 +108,9 @@ async def ws_manager(camidx):
 
 
 def drawBox(frame):
-    boxCoord=(300,300200,100)
-    cv2.rectangle(frame, boxCoord (0, 255, 0), 1)
+    boxCoord = (300, 300, 200, 100)
+    cv2.rectangle(frame, boxCoord, (0, 255, 0), 1)
     return frame
-
-
 
 
 async def emitVideo(camidx, value):
@@ -124,7 +124,7 @@ async def emitVideo(camidx, value):
             success, frame = video.read()
             if not success:
                 break
-            if camidx=='rgb':
+            if camidx == 'rgb':
                 frame = drawBox(frame)
             data = cv2.imencode('.jpeg', frame)[1].tobytes()
 
@@ -140,4 +140,3 @@ async def emitVideo(camidx, value):
         video.release()
         taskManagers[camidx].resetKillSignal()
         print(f'{camidx} relese!')
-
